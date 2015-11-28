@@ -15,7 +15,7 @@ public class HttpRequest {
         try (CloseableHttpClient client = HttpClients.createDefault();
              CloseableHttpResponse response = client.execute(req)) {
             InputStream inputStream = response.getEntity().getContent();
-            return IOUtils.toString(inputStream);
+            return IOUtils.toString(inputStream, "utf-8");
         }
     }
 }

@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.w3c.dom.Node;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.TimerTask;
@@ -28,6 +29,8 @@ public class Main {
         if (logger == null) {
             throw new Exception("Logger configuration fail");
         }
+
+        logger.info("Configuration: " + RSS_CHANNEL + ", " + ARTICLE_AUTHOR + ", " + APP_NAME + ", " + TELEGRAM_CHAT_ID + ", " + TELEGRAM_TOKEN);
 
         HttpRequest request = new HttpRequest();
         TelegramBot bot = new TelegramBot(TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, request, logger);
