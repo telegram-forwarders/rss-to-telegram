@@ -12,9 +12,11 @@ import java.util.ArrayList;
 
 public class RssParser {
     private HttpRequest _request;
+    private Transliterator _transliterator;
 
-    public RssParser(HttpRequest request) {
+    public RssParser(HttpRequest request, Transliterator transliterator) {
         this._request = request;
+        this._transliterator = transliterator;
     }
 
     public ArrayList<Node> getRawData(String url, String authorName) throws Exception {
@@ -31,7 +33,7 @@ public class RssParser {
         ArrayList<Node> list = new ArrayList<>();
         for (Node item : items) {
             Node author = this.getNode(item, "author").get(0);
-            String name = author.getTextContent();
+            String name = this._transliterator.transliterate(author.getTextContent());
             if (name != null && name.equals(authorName)) {
                 list.add(item);
             }

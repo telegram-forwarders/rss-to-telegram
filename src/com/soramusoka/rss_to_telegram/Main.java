@@ -32,9 +32,10 @@ public class Main {
 
         logger.info("Configuration: " + RSS_CHANNEL + ", " + ARTICLE_AUTHOR + ", " + APP_NAME + ", " + TELEGRAM_CHAT_ID + ", " + TELEGRAM_TOKEN);
 
+        Transliterator transliterator = new Transliterator();
         HttpRequest request = new HttpRequest();
         TelegramBot bot = new TelegramBot(TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, request, logger);
-        RssParser parser = new RssParser(request);
+        RssParser parser = new RssParser(request, transliterator);
 
         StateManager stateManager = new StateManager();
         KeyStorage keyStorage = new KeyStorage();
