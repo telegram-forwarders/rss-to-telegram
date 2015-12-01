@@ -32,10 +32,16 @@ public class RssParser {
 
         ArrayList<Node> list = new ArrayList<>();
         for (Node item : items) {
-            Node author = this.getNode(item, "author").get(0);
-            String name = this._transliterator.transliterate(author.getTextContent());
-            if (name != null && name.equals(authorName)) {
-                list.add(item);
+            try {
+                ArrayList<Node> authors = this.getNode(item, "author");
+                if (authors.size() > 0) {
+                    String name = this._transliterator.transliterate(authors.get(0).getTextContent());
+                    if (name != null && name.contains(authorName)) {
+                        list.add(item);
+                    }
+                }
+            } catch (Exception e) {
+                System.out.println(e.toString());
             }
         }
         return list;

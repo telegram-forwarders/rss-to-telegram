@@ -77,16 +77,21 @@ public class Transliterator {
     }
 
     public String transliterate(String string) {
-        StringBuilder transliteratedString = new StringBuilder();
-        for (int i = 0; i < string.length(); i++) {
-            Character ch = string.charAt(i);
-            String charFromMap = charMap.get(ch);
-            if (charFromMap == null) {
-                transliteratedString.append(ch);
-            } else {
-                transliteratedString.append(charFromMap);
+        try {
+            StringBuilder transliteratedString = new StringBuilder();
+            for (int i = 0; i < string.length(); i++) {
+                Character ch = string.charAt(i);
+                String charFromMap = charMap.get(ch);
+                if (charFromMap == null) {
+                    transliteratedString.append(ch);
+                } else {
+                    transliteratedString.append(charFromMap);
+                }
             }
+            return transliteratedString.toString();
+        } catch (Exception e) {
+            System.out.println(e.toString());
+            return null;
         }
-        return transliteratedString.toString();
     }
 }

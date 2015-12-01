@@ -67,6 +67,7 @@ public class Main {
                 }
                 logger.debug("Articles summary, new: " + stateManager.getNewArticleCounter() + ", old: " + stateManager.getOldArticleCounter());
             } catch (Exception e) {
+                System.out.println("e.toString(): " + e.toString());
                 bot.sendMessage("StartPooling error: " + e.toString());
             }
         });
