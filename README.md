@@ -6,7 +6,9 @@
 
 ### Usage
 
-java -jar out/artifacts/rss_to_telegram_jar/rss_to_telegram.jar --token=<token> --chatId=<chatId> --author=<author> --interval=<interval> --rssUrl=<rssUrl> --name=<name>
+```
+java -jar out/artifacts/rss_to_telegram_jar/rss_to_telegram.jar --token=[token] --chatId=[chatId] --author=[author] --interval=[interval] --rssUrl=[rssUrl]
+```
 
 #### params:
 - token - Required, Telegram token
@@ -18,7 +20,11 @@ java -jar out/artifacts/rss_to_telegram_jar/rss_to_telegram.jar --token=<token> 
 ### Docker
 
 #### Build image
+``` bash
 sudo docker build -t <image_name>
+```
 
 #### Run container
-sudo docker run -d --name=<container_name> <image_name> --token=<token> --chatId=<chatId> --author=<author> --interval=<interval> --rssUrl=<rssUrl> --name=<name>
+```
+sudo docker run -d [image_name] --token=[token] --chatId=[chatId] --author=[author] --interval=[interval] --rssUrl=[rssUrl]
+```
