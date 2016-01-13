@@ -6,8 +6,8 @@
 
 ### Usage
 
-```
-java -jar out/artifacts/rss_to_telegram_jar/rss_to_telegram.jar --token=[token] --chatId=[chatId] --author=[author] --interval=[interval] --rssUrl=[rssUrl]
+```shell
+java -jar out/artifacts/rss_to_telegram_jar/rss_to_telegram.jar --param=value
 ```
 
 #### params:
@@ -16,4 +16,3 @@ java -jar out/artifacts/rss_to_telegram_jar/rss_to_telegram.jar --token=[token] 
 - interval - Required, Pooling interval
 - rssUrl - Required, Rss channel
 - author - Author name, news will be filtered by this param (=contains). Could be null
-
