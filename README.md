@@ -17,14 +17,3 @@ java -jar out/artifacts/rss_to_telegram_jar/rss_to_telegram.jar --token=[token] 
 - rssUrl - Required, Rss channel
 - author - Author name, news will be filtered by this param (=contains). Could be null
 
-### Docker
-
-#### Build image
-``` bash
-sudo docker build -t <image_name>
-```
-
-#### Run container
-```
-sudo docker run -d [image_name] --token=[token] --chatId=[chatId] --author=[author] --interval=[interval] --rssUrl=[rssUrl]
-```
