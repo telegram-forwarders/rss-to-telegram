@@ -13,11 +13,8 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         ConfigurationManager config = ConfigurationManager.loadConfiguration(args);
-        if (config == null) {
-            throw new Exception("App configuration fail");
-        }
+        if (config == null) return;
 
-        // TODO: create proper config without String keys, just to avoid any typo
         String RSS_CHANNEL = config.getString("rssUrl");
         String APP_NAME = config.getString("name", "defaultApp");
         String TELEGRAM_TOKEN = config.getString("token");
