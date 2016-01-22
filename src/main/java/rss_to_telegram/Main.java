@@ -1,5 +1,6 @@
 package rss_to_telegram;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.w3c.dom.Node;
@@ -12,22 +13,21 @@ import java.util.TimerTask;
 public class Main {
 
     public static void main(String[] args) throws Exception {
-        ConfigurationManager config = ConfigurationManager.loadConfiguration(args);
-        if (config == null) return;
+        CommandLine cmd = ConfigurationManager.loadConfiguration(args);
+        if (cmd == null) return;
 
-        String RSS_CHANNEL = config.getString("rssUrl");
-        String APP_NAME = config.getString("name", "defaultApp");
-        String TELEGRAM_TOKEN = config.getString("token");
-        String TELEGRAM_CHAT_ID = config.getString("chatId");
-        String ARTICLE_AUTHOR = config.getString("author");
-        int POOLING_INTERVAL = config.getInteger("interval", 300);
+        String[] RSS_CHANNELS = cmd.getOptionValues('u');
+        String TELEGRAM_TOKEN = cmd.getOptionValue('t');
+        String TELEGRAM_CHAT_ID = cmd.getOptionValue('c');
+        String poolingValue = cmd.getOptionValue('i', "300");
+        int POOLING_INTERVAL = Integer.parseInt(poolingValue);
 
-        Logger logger = getLogger(APP_NAME);
+        Logger logger = getLogger();
         if (logger == null) {
             throw new Exception("Logger configuration fail");
         }
 
-        logger.info("Configuration: " + RSS_CHANNEL + ", " + ARTICLE_AUTHOR + ", " + APP_NAME + ", " + TELEGRAM_CHAT_ID + ", " + TELEGRAM_TOKEN);
+        logger.info("Configuration: " + RSS_CHANNELS + ", " + TELEGRAM_CHAT_ID + ", " + TELEGRAM_TOKEN);
 
         Transliterator transliterator = new Transliterator();
         HttpRequest request = new HttpRequest();
@@ -41,23 +41,40 @@ public class Main {
             try {
                 stateManager.resetCounters();
 
-                ArrayList<Node> data = parser.getRawData(RSS_CHANNEL, ARTICLE_AUTHOR);
-                ArrayList<Article> articles = parser.convertToArticle(data); // TODO: SOLID v
+                for (int i = 0; i < RSS_CHANNELS.length; i++) {
+                    String channel = RSS_CHANNELS[i];
+                    String author = null;
+                    String delimiter = "::";
 
-                articles.forEach(article -> {
-                    if (stateManager.getFirstRun()) {
-                        keyStorage.putKey(article.link);
+                    if (channel.indexOf(delimiter) != 0) {
+                        String[] splittedUrl = channel.split(delimiter);
+
+                        if (splittedUrl.length != 2) {
+                            throw new Exception("Url should be like: url::author");
+                        }
+
+                        channel = splittedUrl[0];
+                        author = splittedUrl[1];
                     }
 
-                    if (!keyStorage.hasKey(article.link)) {
-                        keyStorage.putKey(article.link);
-                        stateManager.incrNewArticleCounter();
-                        logger.debug("Received article: " + article.title);
-                        bot.sendMessage(article.link);
-                    } else {
-                        stateManager.incrOldArticleCounter();
-                    }
-                });
+                    ArrayList<Node> data = parser.getRawData(channel, author);
+                    ArrayList<Article> articles = parser.convertToArticle(data); // TODO: SOLID v
+
+                    articles.forEach(article -> {
+                        if (stateManager.getFirstRun()) {
+                            keyStorage.putKey(article.link);
+                        }
+
+                        if (!keyStorage.hasKey(article.link)) {
+                            keyStorage.putKey(article.link);
+                            stateManager.incrNewArticleCounter();
+                            logger.debug("Received article: " + article.title);
+                            bot.sendMessage(article.link);
+                        } else {
+                            stateManager.incrOldArticleCounter();
+                        }
+                    });
+                }
                 if (stateManager.getFirstRun()) {
                     logger.info("First run");
                     stateManager.setFirstRun(false);
@@ -70,15 +87,15 @@ public class Main {
         });
     }
 
-    private static Logger getLogger(String appName) throws Exception {
+    private static Logger getLogger() throws Exception {
         try {
             Properties log4jProperties = new Properties();
-            log4jProperties.setProperty("log4j.logger." + appName, "DEBUG, myConsoleAppender");
+            log4jProperties.setProperty("log4j.logger.app", "DEBUG, myConsoleAppender");
             log4jProperties.setProperty("log4j.appender.myConsoleAppender", "org.apache.log4j.ConsoleAppender");
             log4jProperties.setProperty("log4j.appender.myConsoleAppender.layout", "org.apache.log4j.PatternLayout");
             log4jProperties.setProperty("log4j.appender.myConsoleAppender.layout.ConversionPattern", "%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n");
             PropertyConfigurator.configure(log4jProperties);
-            return Logger.getLogger(appName);
+            return Logger.getLogger("app");
         } catch (Exception e) {
             System.out.println("error: " + e.getMessage());
             return null;

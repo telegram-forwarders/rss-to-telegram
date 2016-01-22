@@ -6,60 +6,42 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 
 public class ConfigurationManager {
-    private CommandLine _cmd;
 
-    public ConfigurationManager(CommandLine cmd) {
-        this._cmd = cmd;
-    }
+    public static Options options = new Options();
 
-    public String getString(String key) {
-        return this.getString(key, null);
-    }
+    public static CommandLine loadConfiguration(String[] args) {
 
-    public String getString(String key, String defaultValue) {
-        return this._cmd.hasOption(key) ? this._cmd.getOptionValue(key) : defaultValue;
-    }
-
-    public Integer getInteger(String key, Integer defaultValue) {
-        return this._cmd.hasOption(key) ? Integer.decode(this._cmd.getOptionValue(key)) : defaultValue;
-    }
-
-    public static ConfigurationManager loadConfiguration(String[] args) {
-        Options options = new Options();
-
-        Option tOption = new Option("t", "token", true, "Telegram bot token.");
+        Option tOption = new Option("t", "token", true, "Telegram bot token. [required, string]");
         tOption.setArgs(1);
         tOption.setOptionalArg(false);
         options.addOption(tOption);
 
-        Option cOption = new Option("c", "chatId", true, "Telegram chat id.");
+        Option cOption = new Option("c", "chatId", true, "Telegram chat id. [required, integer]");
         cOption.setArgs(1);
         cOption.setOptionalArg(false);
         options.addOption(cOption);
 
-        Option aOption = new Option("a", "author", true, "Articles author name.");
-        aOption.setArgs(1);
-        aOption.setOptionalArg(true);
-        options.addOption(aOption);
-
-        Option iOption = new Option("i", "interval", true, "Pooling interval.");
+        Option iOption = new Option("i", "interval", true, "Pooling interval. [optional(default=300), integer]");
         iOption.setArgs(1);
         iOption.setOptionalArg(true);
         options.addOption(iOption);
 
-        Option uOption = new Option("u", "rssUrl", true, "RSS url channel.");
+        Option uOption = new Option("u", "rssUrl", true, "RSS/Author combination. Use :: as a delimiter. Example: http://rss.com::john_doe or http://rss.com. [required, string]");
         uOption.setArgs(1);
-        uOption.setOptionalArg(true);
+        uOption.setOptionalArg(false);
         options.addOption(uOption);
 
         try {
             CommandLineParser optionsParser = new DefaultParser();
-            CommandLine cmd = optionsParser.parse(options, args);
-            return new ConfigurationManager(cmd);
+            return optionsParser.parse(options, args);
         } catch (Exception e) {
             printHelp(options, 80, "Options", "", 3, 5, true, System.out);
             return null;
         }
+    }
+
+    public static void printDefaultHelp() {
+        printHelp(options, 80, "Options", "", 3, 5, true, System.out);
     }
 
     public static void printHelp(final Options options, final int printedRowWidth, final String header, final String footer, final int spacesBeforeOption,
