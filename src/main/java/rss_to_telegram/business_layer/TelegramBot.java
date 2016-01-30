@@ -1,6 +1,7 @@
-package rss_to_telegram;
+package rss_to_telegram.business_layer;
 
 import org.apache.log4j.Logger;
+import rss_to_telegram.service_layer.HttpRequest;
 
 public class TelegramBot {
     private String _token;

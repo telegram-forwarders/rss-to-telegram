@@ -1,4 +1,4 @@
-package rss_to_telegram;
+package rss_to_telegram.service_layer;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;

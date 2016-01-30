@@ -1,9 +1,11 @@
-package rss_to_telegram;
+package rss_to_telegram.business_layer;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
+import rss_to_telegram.dto_layer.Article;
+import rss_to_telegram.service_layer.HttpRequest;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -71,7 +73,10 @@ public class RssParser {
         ArrayList<Article> result = new ArrayList<>();
         for (Node item : list) {
             Article article = new Article();
-            article.author = this.getNode(item, "author").get(0).getTextContent();
+            ArrayList<Node> authorList = this.getNode(item, "author");
+            if (authorList.size() > 0) {
+                article.author = authorList.get(0).getTextContent();
+            }
             article.title = this.getNode(item, "title").get(0).getTextContent();
             article.link = this.getNode(item, "link").get(0).getTextContent();
             article.description = this.getNode(item, "description").get(0).getTextContent();

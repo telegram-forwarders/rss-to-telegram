@@ -1,4 +1,4 @@
-package rss_to_telegram;
+package rss_to_telegram.business_layer;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -3,12 +3,16 @@ package rss_to_telegram;
 import org.apache.commons.cli.CommandLine;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
-import org.w3c.dom.Node;
+import org.codehaus.jackson.map.ObjectMapper;
+import rss_to_telegram.business_layer.*;
+import rss_to_telegram.dto_layer.Config;
+import rss_to_telegram.dto_layer.ConfigRssItem;
+import rss_to_telegram.service_layer.ConfigurationManager;
+import rss_to_telegram.service_layer.HttpRequest;
 
-import java.nio.charset.Charset;
-import java.util.ArrayList;
+import java.io.File;
+import java.io.FileReader;
 import java.util.Properties;
-import java.util.TimerTask;
 
 public class Main {
 
@@ -16,99 +20,56 @@ public class Main {
         CommandLine cmd = ConfigurationManager.loadConfiguration(args);
         if (cmd == null) return;
 
-        String[] RSS_CHANNELS = cmd.getOptionValues('u');
-        String TELEGRAM_TOKEN = cmd.getOptionValue('t');
-        String TELEGRAM_CHAT_ID = cmd.getOptionValue('c');
-        String poolingValue = cmd.getOptionValue('i', "300");
-        int POOLING_INTERVAL = Integer.parseInt(poolingValue);
+        String configFile = cmd.getOptionValue('p');
+        Config config = getConfig(configFile);
 
-        Logger logger = getLogger();
-        if (logger == null) {
-            throw new Exception("Logger configuration fail");
-        }
-
-        logger.info("Configuration: " + RSS_CHANNELS + ", " + TELEGRAM_CHAT_ID + ", " + TELEGRAM_TOKEN);
+        Logger logger = getLogger("main");
+        logger.info("Configuration: " + config.toString());
 
         Transliterator transliterator = new Transliterator();
         HttpRequest request = new HttpRequest();
-        TelegramBot bot = new TelegramBot(TELEGRAM_TOKEN, TELEGRAM_CHAT_ID, request, logger);
         RssParser parser = new RssParser(request, transliterator);
 
-        StateManager stateManager = new StateManager();
-        KeyStorage keyStorage = new KeyStorage();
+        TelegramBot mainBot = new TelegramBot(config.baseTelegramToken, config.baseTelegramChatId, request, logger);
 
-        startPooling(POOLING_INTERVAL, () -> {
-            try {
-                stateManager.resetCounters();
+        for (ConfigRssItem item : config.rssData) {
+            Logger itemLogger = getLogger(item.name);
+            StateManager stateManager = new StateManager();
+            KeyStorage keyStorage = new KeyStorage();
 
-                for (int i = 0; i < RSS_CHANNELS.length; i++) {
-                    String channel = RSS_CHANNELS[i];
-                    String author = null;
-                    String delimiter = "::";
+            TelegramBot bot = item.telegramChatId == null
+                    ? mainBot
+                    : new TelegramBot(item.telegramToken, item.telegramChatId, request, itemLogger);
 
-                    if (channel.indexOf(delimiter) != 0) {
-                        String[] splittedUrl = channel.split(delimiter);
-
-                        if (splittedUrl.length != 2) {
-                            throw new Exception("Url should be like: url::author");
-                        }
-
-                        channel = splittedUrl[0];
-                        author = splittedUrl[1];
-                    }
-
-                    ArrayList<Node> data = parser.getRawData(channel, author);
-                    ArrayList<Article> articles = parser.convertToArticle(data); // TODO: SOLID v
-
-                    articles.forEach(article -> {
-                        if (stateManager.getFirstRun()) {
-                            keyStorage.putKey(article.link);
-                        }
-
-                        if (!keyStorage.hasKey(article.link)) {
-                            keyStorage.putKey(article.link);
-                            stateManager.incrNewArticleCounter();
-                            logger.debug("Received article: " + article.title);
-                            bot.sendMessage(article.link);
-                        } else {
-                            stateManager.incrOldArticleCounter();
-                        }
-                    });
-                }
-                if (stateManager.getFirstRun()) {
-                    logger.info("First run");
-                    stateManager.setFirstRun(false);
-                }
-                logger.debug("Articles summary, new: " + stateManager.getNewArticleCounter() + ", old: " + stateManager.getOldArticleCounter());
-            } catch (Exception e) {
-                System.out.println("e.toString(): " + e.toString());
-                bot.sendMessage("StartPooling error: " + e.toString());
-            }
-        });
+            Stream stream = new Stream(stateManager, keyStorage, parser, bot, itemLogger);
+            stream.start(item);
+        }
     }
 
-    private static Logger getLogger() throws Exception {
+    private static Logger getLogger(String name) throws Exception {
+        name = name == null ? "default" : name;
         try {
             Properties log4jProperties = new Properties();
-            log4jProperties.setProperty("log4j.logger.app", "DEBUG, myConsoleAppender");
+            log4jProperties.setProperty("log4j.logger." + name, "DEBUG, myConsoleAppender");
             log4jProperties.setProperty("log4j.appender.myConsoleAppender", "org.apache.log4j.ConsoleAppender");
             log4jProperties.setProperty("log4j.appender.myConsoleAppender.layout", "org.apache.log4j.PatternLayout");
             log4jProperties.setProperty("log4j.appender.myConsoleAppender.layout.ConversionPattern", "%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n");
             PropertyConfigurator.configure(log4jProperties);
-            return Logger.getLogger("app");
+            return Logger.getLogger(name);
         } catch (Exception e) {
-            System.out.println("error: " + e.getMessage());
             return null;
         }
     }
 
-    private static void startPooling(int intervalSec, final Runnable runnable) {
-        java.util.Timer t = new java.util.Timer();
-        t.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                runnable.run();
-            }
-        }, 0, intervalSec * 1000);
+    private static Config getConfig(String configPath) {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            String filePath = new File(configPath).getAbsolutePath();
+            FileReader file = new FileReader(filePath);
+            return mapper.readValue(file, Config.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

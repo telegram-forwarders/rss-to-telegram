@@ -1,4 +1,4 @@
-package rss_to_telegram;
+package rss_to_telegram.dto_layer;
 
 public class Article {
     public String title;
