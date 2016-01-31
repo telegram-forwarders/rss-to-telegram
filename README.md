@@ -7,12 +7,25 @@
 ### Usage
 
 ```shell
-usage: java rss_to_telegram.jar [-c <arg>] [-i <arg>] [-t <arg>] [-u <arg>]
+usage: java rss_to_telegram.jar [-c <arg>]
 Options
-   -c,--chatId <arg>       Telegram chat id. [required, integer]
-   -i,--interval <arg>     Pooling interval. [optional(default=300), integer]
-   -t,--token <arg>        Telegram bot token. [required, string]
-   -u,--rssUrl <arg>       RSS/Author combination. Use :: as a delimiter.
-                           Example: http://rss.com::john_doe or http://rss.com.
-                           [required, string]
+   -c,--config <arg>     Path to config file
 ```
+
+```javascript
+{
+  "baseTelegramToken": "TOKEN", // required
+  "baseTelegramChatId": "CHAT_ID", // required
+  "rssData": [
+    {
+      "telegramToken": "TOKEN", // could be null
+      "telegramChatId": "CHAT_ID", // could be null
+      "name": "NAME", // could be null
+      "url": "http://rss.org", // required
+      "interval": 300 // required
+    }
+  ]
+}
+```
+
+If **telegramToken** and **telegramChatId** are null, will be use **baseTelegramToken** and **baseTelegramChatId** as default.
