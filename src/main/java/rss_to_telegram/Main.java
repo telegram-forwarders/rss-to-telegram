@@ -20,7 +20,7 @@ public class Main {
         CommandLine cmd = ConfigurationManager.loadConfiguration(args);
         if (cmd == null) return;
 
-        String configFile = cmd.getOptionValue('p');
+        String configFile = cmd.getOptionValue('c');
         Config config = getConfig(configFile);
 
         Logger logger = getLogger("main");
